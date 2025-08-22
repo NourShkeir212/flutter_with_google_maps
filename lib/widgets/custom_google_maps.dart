@@ -20,6 +20,15 @@ class _CustomGoogleMapsState extends State<CustomGoogleMaps> {
     super.initState();
   }
 
+  void initMapStyle()async {
+    //to provide new style we need
+    // 1. load json file
+    var lightMapStyle = await DefaultAssetBundle.of(context).loadString("assets/map_styles/light_map_style.json");
+    // 2. update Style
+    googleMapController.setMapStyle(lightMapStyle);
+
+  }
+
   @override
   dispose(){
     googleMapController.dispose();
@@ -34,9 +43,12 @@ class _CustomGoogleMapsState extends State<CustomGoogleMaps> {
       child: Stack(
         children: [
           GoogleMap(
+
+            mapType: MapType.normal,
             // لإعطاء الكونترولر الى غوغل ماب
             onMapCreated: (controller) {
               googleMapController = controller;
+              initMapStyle();
             },
               initialCameraPosition: initialCameraPosition,
               cameraTargetBounds: CameraTargetBounds(
@@ -69,3 +81,5 @@ class _CustomGoogleMapsState extends State<CustomGoogleMaps> {
 // city view 10 -> 12
 // street view 13 -> 17
 // building view 18 -> 20
+
+
