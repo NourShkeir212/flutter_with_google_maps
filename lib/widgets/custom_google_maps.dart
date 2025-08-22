@@ -21,15 +21,45 @@ class _CustomGoogleMapsState extends State<CustomGoogleMaps> {
   }
 
   @override
+  dispose(){
+    googleMapController.dispose();
+    super.dispose();
+  }
+
+  // للتحكم ب غوغل ماب
+  late GoogleMapController googleMapController;
+  @override
   Widget build(BuildContext context) {
-    return GoogleMap(
-        initialCameraPosition: initialCameraPosition,
-        cameraTargetBounds: CameraTargetBounds(
-          LatLngBounds(
-            southwest: LatLng(33.45, 36.2),
-            northeast: LatLng(33.55, 36.35),
+    return SafeArea(
+      child: Stack(
+        children: [
+          GoogleMap(
+            // لإعطاء الكونترولر الى غوغل ماب
+            onMapCreated: (controller) {
+              googleMapController = controller;
+            },
+              initialCameraPosition: initialCameraPosition,
+              cameraTargetBounds: CameraTargetBounds(
+                LatLngBounds(
+                  southwest: LatLng(33.45, 36.2),
+                  northeast: LatLng(33.55, 36.35),
+                ),
+              )
           ),
-        )
+          Positioned(
+            bottom: 16,
+            left: 16,
+            right: 16,
+            child: ElevatedButton(
+                onPressed: (){
+
+                  googleMapController.animateCamera(CameraUpdate.newLatLng(LatLng(33.445862511561614, 36.26707881710544)));
+                },
+                child: Text('Change Location')
+            ),
+          )
+        ],
+      ),
     );
   }
 }
