@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_maps/model/place_model.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-
+import 'dart:ui' as ui;
 class CustomGoogleMaps extends StatefulWidget {
   const CustomGoogleMaps({super.key});
 
@@ -22,9 +23,29 @@ class _CustomGoogleMapsState extends State<CustomGoogleMaps> {
     super.initState();
   }
 
+  // -------------- FOR CHANGE ICON SIZE ------------ //
+  // Future<Uint8List> getImageFromRowData(String image , double width)async {
+  //   var imageData = await rootBundle.load(image);
+  //   var imageCodec = await ui.instantiateImageCodec(
+  //       imageData.buffer.asUint8List(),
+  //       targetWidth: width.round()
+  //   );
+  //   var imageFrameInfo = await imageCodec.getNextFrame();
+  //
+  //   var imageByteData = await imageFrameInfo.image.toByteData(format: ui.ImageByteFormat.png);
+  //
+  //   return imageByteData!.buffer.asUint8List();
+  // }
+
+
   void initMarkers() async {
+    BitmapDescriptor customMarkerIcon = await BitmapDescriptor.asset(ImageConfiguration(size: Size(25, 25)),"assets/icons/marker.png",);
     var myMarkers = places.map((placeModel) =>
         Marker(
+            icon: customMarkerIcon,
+            infoWindow: InfoWindow(
+              title: placeModel.name,
+            ),
             markerId: MarkerId(
               placeModel.id.toString(),
             ),
@@ -35,6 +56,9 @@ class _CustomGoogleMapsState extends State<CustomGoogleMaps> {
         ),
     ).toSet();
     markers.addAll(myMarkers);
+    setState(() {
+
+    });
   }
 
   Set<Marker> markers = {};
@@ -60,6 +84,7 @@ class _CustomGoogleMapsState extends State<CustomGoogleMaps> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: GoogleMap(
+        zoomControlsEnabled: false,
         markers: markers,
         mapType: MapType.normal,
         // لإعطاء الكونترولر الى غوغل ماب
