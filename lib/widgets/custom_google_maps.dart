@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_maps/model/place_model.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class CustomGoogleMaps extends StatefulWidget {
@@ -9,28 +10,46 @@ class CustomGoogleMaps extends StatefulWidget {
 }
 
 class _CustomGoogleMapsState extends State<CustomGoogleMaps> {
-
   late CameraPosition initialCameraPosition;
 
+  @override
   void initState() {
     initialCameraPosition = CameraPosition(
-        zoom: 13, target: LatLng(33.48664680612372, 36.30252545175364,
-    )
+      zoom: 12,
+      target: LatLng(33.48664680612372, 36.30252545175364),
     );
+    initMarkers();
     super.initState();
   }
 
-  void initMapStyle()async {
+  void initMarkers() async {
+    var myMarkers = places.map((placeModel) =>
+        Marker(
+            markerId: MarkerId(
+              placeModel.id.toString(),
+            ),
+            position: placeModel.latLng,
+            onTap: () {
+              print(placeModel.name);
+            }
+        ),
+    ).toSet();
+    markers.addAll(myMarkers);
+  }
+
+  Set<Marker> markers = {};
+  void initMapStyle() async {
     //to provide new style we need
     // 1. load json file
-    var lightMapStyle = await DefaultAssetBundle.of(context).loadString("assets/map_styles/light_map_style.json");
+    var lightMapStyle = await DefaultAssetBundle.of(
+      context,
+    ).loadString("assets/map_styles/light_map_style.json");
     // 2. update Style
     googleMapController.setMapStyle(lightMapStyle);
-
   }
 
   @override
-  dispose(){
+  dispose() {
     googleMapController.dispose();
     super.dispose();
   }
@@ -40,37 +59,21 @@ class _CustomGoogleMapsState extends State<CustomGoogleMaps> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Stack(
-        children: [
-          GoogleMap(
-
-            mapType: MapType.normal,
-            // لإعطاء الكونترولر الى غوغل ماب
-            onMapCreated: (controller) {
-              googleMapController = controller;
-              initMapStyle();
-            },
-              initialCameraPosition: initialCameraPosition,
-              cameraTargetBounds: CameraTargetBounds(
-                LatLngBounds(
-                  southwest: LatLng(33.45, 36.2),
-                  northeast: LatLng(33.55, 36.35),
-                ),
-              )
+      child: GoogleMap(
+        markers: markers,
+        mapType: MapType.normal,
+        // لإعطاء الكونترولر الى غوغل ماب
+        onMapCreated: (controller) {
+          googleMapController = controller;
+          initMapStyle();
+        },
+        initialCameraPosition: initialCameraPosition,
+        cameraTargetBounds: CameraTargetBounds(
+          LatLngBounds(
+            southwest: LatLng(33.45, 36.2),
+            northeast: LatLng(33.55, 36.35),
           ),
-          Positioned(
-            bottom: 16,
-            left: 16,
-            right: 16,
-            child: ElevatedButton(
-                onPressed: (){
-
-                  googleMapController.animateCamera(CameraUpdate.newLatLng(LatLng(33.445862511561614, 36.26707881710544)));
-                },
-                child: Text('Change Location')
-            ),
-          )
-        ],
+        ),
       ),
     );
   }
@@ -81,5 +84,3 @@ class _CustomGoogleMapsState extends State<CustomGoogleMaps> {
 // city view 10 -> 12
 // street view 13 -> 17
 // building view 18 -> 20
-
-
