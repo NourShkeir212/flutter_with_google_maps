@@ -22,6 +22,7 @@ class _CustomGoogleMapsState extends State<CustomGoogleMaps> {
     initMarkers();
     initPolyLines();
     initPolyGon();
+    initCircles();
     super.initState();
   }
 
@@ -67,13 +68,14 @@ class _CustomGoogleMapsState extends State<CustomGoogleMaps> {
   void initPolyLines() {
     Polyline polyline = const Polyline(
       width: 3,
+        zIndex: 1,
         startCap: Cap.roundCap,
         endCap: Cap.roundCap,
         color: Colors.red,
         polylineId: PolylineId("1"),
         points: [
           LatLng(33.48773079891359,36.30227789564415),
-          LatLng(33.43400203803081,36.279805334983585),
+          LatLng(33.35306108246186, 36.25167150764568),
         ]
     );
     polyLines.add(polyline);
@@ -83,6 +85,7 @@ class _CustomGoogleMapsState extends State<CustomGoogleMaps> {
   void initPolyGon() {
     Polygon polygon =  Polygon(
       strokeWidth:3,
+      zIndex: 2,
       strokeColor: Colors.orange,
       fillColor: Colors.orange.withOpacity(0.4),
         polygonId: PolygonId("1"),
@@ -94,7 +97,24 @@ class _CustomGoogleMapsState extends State<CustomGoogleMaps> {
     );
     polygons.add(polygon);
   }
-  
+
+
+  // لرسم دائرة
+  void initCircles() {
+    Circle circle =  Circle(
+      center: LatLng(33.48773079891359,36.30227789564415),
+      radius: 3000,
+      strokeWidth: 2,
+      zIndex: 3,
+      strokeColor: Colors.orange,
+      fillColor: Colors.orangeAccent.withOpacity(0.4),
+      circleId: CircleId("1"),
+    );
+
+    circles.add(circle);
+  }
+
+  Set<Circle> circles = {};
   Set<Polyline> polyLines = {};
   Set<Polygon> polygons = {};
   Set<Marker> markers = {};
@@ -120,6 +140,7 @@ class _CustomGoogleMapsState extends State<CustomGoogleMaps> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: GoogleMap(
+        circles: circles,
         polygons: polygons,
         polylines: polyLines,
         zoomControlsEnabled: false,
