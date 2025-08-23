@@ -20,6 +20,8 @@ class _CustomGoogleMapsState extends State<CustomGoogleMaps> {
       target: LatLng(33.48664680612372, 36.30252545175364),
     );
     initMarkers();
+    initPolyLines();
+    initPolyGon();
     super.initState();
   }
 
@@ -61,6 +63,40 @@ class _CustomGoogleMapsState extends State<CustomGoogleMaps> {
     });
   }
 
+  // لرسم مسار
+  void initPolyLines() {
+    Polyline polyline = const Polyline(
+      width: 3,
+        startCap: Cap.roundCap,
+        endCap: Cap.roundCap,
+        color: Colors.red,
+        polylineId: PolylineId("1"),
+        points: [
+          LatLng(33.48773079891359,36.30227789564415),
+          LatLng(33.43400203803081,36.279805334983585),
+        ]
+    );
+    polyLines.add(polyline);
+  }
+
+  // لرسم اشكال او تحديد منطقة 
+  void initPolyGon() {
+    Polygon polygon =  Polygon(
+      strokeWidth:3,
+      strokeColor: Colors.orange,
+      fillColor: Colors.orange.withOpacity(0.4),
+        polygonId: PolygonId("1"),
+        points: [
+          LatLng(33.48773079891359,36.30227789564415),
+          LatLng(33.43400203803081,36.279805334983585),
+          LatLng(33.44597321739947,36.267128760909564),
+        ]
+    );
+    polygons.add(polygon);
+  }
+  
+  Set<Polyline> polyLines = {};
+  Set<Polygon> polygons = {};
   Set<Marker> markers = {};
   void initMapStyle() async {
     //to provide new style we need
@@ -77,13 +113,15 @@ class _CustomGoogleMapsState extends State<CustomGoogleMaps> {
     googleMapController.dispose();
     super.dispose();
   }
-
+  
   // للتحكم ب غوغل ماب
   late GoogleMapController googleMapController;
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: GoogleMap(
+        polygons: polygons,
+        polylines: polyLines,
         zoomControlsEnabled: false,
         markers: markers,
         mapType: MapType.normal,
