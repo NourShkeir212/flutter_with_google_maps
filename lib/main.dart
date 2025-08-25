@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'widgets/google_map_view.dart';
 
-import 'widgets/custom_google_maps.dart';
-
-void main(){
-  runApp(TestsGoogleMapsWithFlutter());
+void main() {
+  runApp(RouteTrackerApp());
 }
 
-class TestsGoogleMapsWithFlutter extends StatelessWidget {
-  const TestsGoogleMapsWithFlutter({super.key});
+class RouteTrackerApp extends StatelessWidget {
+  const RouteTrackerApp({super.key});
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: CustomGoogleMaps(),
+      home: GoogleMapView(),
     );
   }
 }
