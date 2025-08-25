@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_maps/model/place_model.dart';
+import 'package:flutter_maps/utils/location_service.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:ui' as ui;
 class CustomGoogleMaps extends StatefulWidget {
@@ -12,112 +11,66 @@ class CustomGoogleMaps extends StatefulWidget {
 
 class _CustomGoogleMapsState extends State<CustomGoogleMaps> {
   late CameraPosition initialCameraPosition;
+  late LocationService locationService;
 
   @override
   void initState() {
     initialCameraPosition = CameraPosition(
-      zoom: 12,
+      zoom: 1,
       target: LatLng(33.48664680612372, 36.30252545175364),
     );
-    initMarkers();
-    initPolyLines();
-    initPolyGon();
-    initCircles();
+    locationService = LocationService();
+    updateMyLocation();
     super.initState();
   }
 
-  // -------------- FOR CHANGE ICON SIZE ------------ //
-  // Future<Uint8List> getImageFromRowData(String image , double width)async {
-  //   var imageData = await rootBundle.load(image);
-  //   var imageCodec = await ui.instantiateImageCodec(
-  //       imageData.buffer.asUint8List(),
-  //       targetWidth: width.round()
-  //   );
-  //   var imageFrameInfo = await imageCodec.getNextFrame();
-  //
-  //   var imageByteData = await imageFrameInfo.image.toByteData(format: ui.ImageByteFormat.png);
-  //
-  //   return imageByteData!.buffer.asUint8List();
-  // }
-
-
-  void initMarkers() async {
-    BitmapDescriptor customMarkerIcon = await BitmapDescriptor.asset(ImageConfiguration(size: Size(25, 25)),"assets/icons/marker.png",);
-    var myMarkers = places.map((placeModel) =>
-        Marker(
-            icon: customMarkerIcon,
-            infoWindow: InfoWindow(
-              title: placeModel.name,
-            ),
-            markerId: MarkerId(
-              placeModel.id.toString(),
-            ),
-            position: placeModel.latLng,
-            onTap: () {
-              print(placeModel.name);
-            }
-        ),
-    ).toSet();
-    markers.addAll(myMarkers);
-    setState(() {
-
-    });
+  void updateMyLocation() async {
+    await locationService.checkAndRequestLocationService();
+    bool hasPermission = await locationService
+        .checkAndRequestLocationPermission();
+    // we didn't put "await" to it because its the last method ,
+    // the two method before it we need them to finish before we do the last one
+    if (hasPermission) {
+      locationService.getRealTimeLocationData((locationData) {
+        LatLng myLocation = LatLng(
+            locationData.latitude!, locationData.longitude!);
+        setMyCameraPosition(myLocation);
+        setMyLocationMarker(myLocation);
+      });
+    } else {
+      // TODO: SHOW SNACK BAR
+    }
   }
 
-  // لرسم مسار
-  void initPolyLines() {
-    Polyline polyline = const Polyline(
-      width: 3,
-        zIndex: 1,
-        startCap: Cap.roundCap,
-        endCap: Cap.roundCap,
-        color: Colors.red,
-        polylineId: PolylineId("1"),
-        points: [
-          LatLng(33.48773079891359,36.30227789564415),
-          LatLng(33.35306108246186, 36.25167150764568),
-        ]
-    );
-    polyLines.add(polyline);
+  void setMyCameraPosition(LatLng myLocation) {
+    if (isFirstCall) {
+      CameraPosition cameraPosition = CameraPosition(
+        target: myLocation,
+        zoom: 17,
+      );
+      googleMapController?.animateCamera(
+        CameraUpdate.newCameraPosition(cameraPosition),
+      );
+      isFirstCall = false;
+    } else {
+      googleMapController?.animateCamera(
+        CameraUpdate.newLatLng(myLocation),
+      );
+    }
   }
 
-  // لرسم اشكال او تحديد منطقة 
-  void initPolyGon() {
-    Polygon polygon =  Polygon(
-      strokeWidth:3,
-      zIndex: 2,
-      strokeColor: Colors.orange,
-      fillColor: Colors.orange.withOpacity(0.4),
-        polygonId: PolygonId("1"),
-        points: [
-          LatLng(33.48773079891359,36.30227789564415),
-          LatLng(33.43400203803081,36.279805334983585),
-          LatLng(33.44597321739947,36.267128760909564),
-        ]
-    );
-    polygons.add(polygon);
-  }
-
-
-  // لرسم دائرة
-  void initCircles() {
-    Circle circle =  Circle(
-      center: LatLng(33.48773079891359,36.30227789564415),
-      radius: 3000,
-      strokeWidth: 2,
-      zIndex: 3,
-      strokeColor: Colors.orange,
-      fillColor: Colors.orangeAccent.withOpacity(0.4),
-      circleId: CircleId("1"),
+  void setMyLocationMarker(LatLng myLocation) {
+    var myLocationMarker = Marker(
+      markerId: MarkerId(
+        "myLocationMarker",
+      ),
+      position: myLocation,
     );
 
-    circles.add(circle);
+    markers.add(myLocationMarker);
+    setState(() {});
   }
 
-  Set<Circle> circles = {};
-  Set<Polyline> polyLines = {};
-  Set<Polygon> polygons = {};
-  Set<Marker> markers = {};
   void initMapStyle() async {
     //to provide new style we need
     // 1. load json file
@@ -125,26 +78,29 @@ class _CustomGoogleMapsState extends State<CustomGoogleMaps> {
       context,
     ).loadString("assets/map_styles/light_map_style.json");
     // 2. update Style
-    googleMapController.setMapStyle(lightMapStyle);
+    googleMapController!.setMapStyle(lightMapStyle);
   }
+
 
   @override
   dispose() {
-    googleMapController.dispose();
+    googleMapController!.dispose();
     super.dispose();
   }
-  
+
+
+  bool isFirstCall = true;
+
   // للتحكم ب غوغل ماب
-  late GoogleMapController googleMapController;
+  GoogleMapController? googleMapController;
+  Set<Marker> markers = {};
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: GoogleMap(
-        circles: circles,
-        polygons: polygons,
-        polylines: polyLines,
-        zoomControlsEnabled: false,
         markers: markers,
+        zoomControlsEnabled: false,
         mapType: MapType.normal,
         // لإعطاء الكونترولر الى غوغل ماب
         onMapCreated: (controller) {
@@ -163,8 +119,26 @@ class _CustomGoogleMapsState extends State<CustomGoogleMaps> {
   }
 }
 
+
+// -------- Map View -------------
+
 // world view 0 -> 3
 // country view 4 -> 6
 // city view 10 -> 12
 // street view 13 -> 17
 // building view 18 -> 20
+
+
+// -------------- FOR CHANGE ICON SIZE ------------ //
+// Future<Uint8List> getImageFromRowData(String image , double width)async {
+//   var imageData = await rootBundle.load(image);
+//   var imageCodec = await ui.instantiateImageCodec(
+//       imageData.buffer.asUint8List(),
+//       targetWidth: width.round()
+//   );
+//   var imageFrameInfo = await imageCodec.getNextFrame();
+//
+//   var imageByteData = await imageFrameInfo.image.toByteData(format: ui.ImageByteFormat.png);
+//
+//   return imageByteData!.buffer.asUint8List();
+// }
